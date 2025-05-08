@@ -1,0 +1,17 @@
+node_modules/
+.env
+
+# Hardhat build folders
+cache/
+artifacts/
+
+# TypeChain generated files
+typechain/
+typechain-types/
+
+# Coverage files
+coverage/
+coverage.json
+
+# Hardhat Ignition local deployments
+ignition/deployments/chain-31337/
