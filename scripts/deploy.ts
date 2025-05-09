@@ -5,17 +5,17 @@ async function main() {
 
   console.log("Deploying contract with address:", deployer.address);
 
-  const StudyToken = await ethers.getContractFactory("StudyToken");
-  const studyToken = await StudyToken.deploy();
+  const SimbiToken = await ethers.getContractFactory("SimbiToken");
+  const simbiToken = await SimbiToken.deploy();
 
-  const deploymentTx = studyToken.deploymentTransaction();
+  const deploymentTx = simbiToken.deploymentTransaction();
   if (!deploymentTx) throw new Error("Deployment transaction is null");
 
   const receipt = await deploymentTx.wait();
   if (!receipt) throw new Error("Deployment receipt is null");
 
   const contractAddress = receipt.contractAddress;
-  console.log("StudyToken deployed to:", contractAddress);
+  console.log("SimbiToken deployed to:", contractAddress);
 
   // Optional delay to ensure the contract is fully indexed on Etherscan
   console.log("Waiting 1 minute before verification...");
