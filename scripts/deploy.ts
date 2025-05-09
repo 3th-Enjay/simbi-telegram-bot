@@ -29,6 +29,7 @@ async function main() {
   console.log("✅ StudyAchievements deployed to:", studyAchievementsAddress);
 
   // Optional delay before verification
+
   console.log("Waiting 1 minute before verification...");
   await new Promise((resolve) => setTimeout(resolve, 60000));
 
