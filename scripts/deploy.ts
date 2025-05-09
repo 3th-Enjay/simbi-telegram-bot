@@ -2,34 +2,58 @@ import { ethers, run } from "hardhat";
 
 async function main() {
   const [deployer] = await ethers.getSigners();
+  console.log("Deploying contracts with address:", deployer.address);
 
-  console.log("Deploying contract with address:", deployer.address);
-
+  // Deploy StudyToken
   const StudyToken = await ethers.getContractFactory("StudyToken");
   const studyToken = await StudyToken.deploy();
 
-  const deploymentTx = studyToken.deploymentTransaction();
-  if (!deploymentTx) throw new Error("Deployment transaction is null");
+  const tokenTx = studyToken.deploymentTransaction();
+  if (!tokenTx) throw new Error("StudyToken deployment transaction is null");
+  const tokenReceipt = await tokenTx.wait();
+  if (!tokenReceipt || !tokenReceipt.contractAddress)
+    throw new Error("StudyToken deployment failed");
+  const studyTokenAddress = tokenReceipt.contractAddress;
+  console.log("✅ StudyToken deployed to:", studyTokenAddress);
 
-  const receipt = await deploymentTx.wait();
-  if (!receipt) throw new Error("Deployment receipt is null");
+  // Deploy StudyAchievements
+  const StudyAchievements = await ethers.getContractFactory("StudyAchievements");
+  const studyAchievements = await StudyAchievements.deploy();
 
-  const contractAddress = receipt.contractAddress;
-  console.log("StudyToken deployed to:", contractAddress);
+  const achievementsTx = studyAchievements.deploymentTransaction();
+  if (!achievementsTx) throw new Error("StudyAchievements deployment transaction is null");
+  const achievementsReceipt = await achievementsTx.wait();
+  if (!achievementsReceipt || !achievementsReceipt.contractAddress)
+    throw new Error("StudyAchievements deployment failed");
+  const studyAchievementsAddress = achievementsReceipt.contractAddress;
+  console.log("✅ StudyAchievements deployed to:", studyAchievementsAddress);
 
-  // Optional delay to ensure the contract is fully indexed on Etherscan
+  // Optional delay before verification
   console.log("Waiting 1 minute before verification...");
   await new Promise((resolve) => setTimeout(resolve, 60000));
 
+  // Verify StudyToken
   try {
-    console.log("Verifying contract...");
+    console.log("Verifying StudyToken...");
     await run("verify:verify", {
-      address: contractAddress,
+      address: studyTokenAddress,
       constructorArguments: [],
     });
-    console.log("Contract verified successfully!");
+    console.log("✅ StudyToken verified!");
   } catch (err: any) {
-    console.error("Verification failed:", err.message || err);
+    console.error("❌ StudyToken verification failed:", err.message || err);
+  }
+
+  // Verify StudyAchievements
+  try {
+    console.log("Verifying StudyAchievements...");
+    await run("verify:verify", {
+      address: studyAchievementsAddress,
+      constructorArguments: [],
+    });
+    console.log("✅ StudyAchievements verified!");
+  } catch (err: any) {
+    console.error("❌ StudyAchievements verification failed:", err.message || err);
   }
 }
 
@@ -37,5 +61,3 @@ main().catch((error) => {
   console.error(error);
   process.exitCode = 1;
 });
-// This script deploys the StudyToken contract to the Sepolia test network and verifies it on Etherscan.
-// It uses Hardhat's built-in functionalities to handle deployment and verification.
