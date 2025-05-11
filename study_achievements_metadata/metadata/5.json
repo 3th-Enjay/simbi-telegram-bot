@@ -1,0 +1,41 @@
+{
+  "name": "Subject Expert",
+  "description": "Awarded for comprehensive mastery - completing ALL study resources and the full study plan in [Subject] with consistently high scores.",
+  "image": "ipfs://bafkreifkv6pkry6ltcczjyilq4ncmzxuncckaxvmqfoyr3uru77asfuvom",
+  "external_url": "https://yourstudyapp.com/achievements/USER_ID?ref=nft",
+  "attributes": [
+    {
+      "trait_type": "Achievement",
+      "value": "Subject Expert"
+    },
+    {
+      "trait_type": "Milestone",
+      "value": "Completed All [Subject] Resources + Plan" 
+    },
+    {
+      "trait_type": "Performance",
+      "value": "90%+ Average Score" 
+    },
+    {
+      "trait_type": "Completion",
+      "value": "100% Resources"
+    },
+    {
+      "trait_type": "Platform",
+      "value": "Simbi Telegram & Web App"
+    }
+  ],
+  "properties": {
+    "telegram_mini_app": {
+      "deep_link": "https://t.me/your_mini_app/achievements?userId=USER_ID"
+    },
+    "web_app": {
+      "profile_url": "https://yourstudyapp.com/profile/USER_ID"
+    },
+    "subject_data": { 
+      "subject_id": "SUBJECT_ID", 
+      "resources_completed": ["resource1_id", "resource2_id"],
+      "completion_date": "TIMESTAMP" 
+    }
+  }
+}

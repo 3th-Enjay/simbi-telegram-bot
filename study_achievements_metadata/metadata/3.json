@@ -1,0 +1,32 @@
+{
+  "name": "Streak Scholar",
+  "description": "Awarded for maintaining an unbroken study streak for 30 consecutive days.",
+  "image": "ipfs://bafkreif5bypcqkycukltjhqe2i7f7wvay5bqg3bgltesoihalgmxtfvla4",
+  "external_url": "https://yourstudyapp.com/achievements/USER_ID?ref=nft",
+  "attributes": [
+    {
+      "trait_type": "Achievement",
+      "value": "Streak Scholar"
+    },
+    {
+      "trait_type": "Milestone",
+      "value": "30-Day Study Streak"
+    },
+    {
+      "trait_type": "Platform",
+      "value": "Simbi Telegram & Web App"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Uncommon" 
+    }
+  ],
+  "properties": {
+    "telegram_mini_app": {
+      "deep_link": "https://t.me/your_mini_app/achievements?userId=USER_ID"
+    },
+    "web_app": {
+      "profile_url": "https://yourstudyapp.com/profile/USER_ID"
+    }
+  }
+}

@@ -5,34 +5,29 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 /**
  * @title SimbiToken
  * @notice A token with study group staking and reward mechanics
- * @dev Replaces ERC20Snapshot with ERC20Votes checkpointing
+ * @dev Extends ERC20Votes for checkpointing functionality
  */
 contract SimbiToken is ERC20, ERC20Permit, ERC20Votes, AccessControl, ReentrancyGuard {
     using SafeERC20 for IERC20;
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    // Max participants
     uint256 public constant MAX_PARTICIPANTS = 50;
-
-    // Roles
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant MODERATOR_ROLE = keccak256("MODERATOR_ROLE");
     bytes32 public constant REWARD_MANAGER_ROLE = keccak256("REWARD_MANAGER_ROLE");
 
-    // Token reward parameters
     uint256 public signupReward = 50 ether;
     uint256 public loginReward = 40 ether;
     uint256 public maxBalance = 200 ether;
     mapping(address => uint256) public lastFunded;
 
-    // Timelock
     uint256 public constant TIMELOCK_PERIOD = 2 days;
     mapping(bytes32 => uint256) public timelockSchedule;
 
@@ -56,28 +51,8 @@ contract SimbiToken is ERC20, ERC20Permit, ERC20Votes, AccessControl, Reentrancy
     }
 
     mapping(uint256 => StudySession) private sessions;
-
-    function getSession(uint256 id) external view returns (
-        address[] memory participants,
-        uint256 deadline,
-        uint256 totalStake,
-        SessionState state,
-        uint256 snapshotBlock,
-        address[] memory winners,
-        uint256 rewardPerWinner
-    ) {
-        StudySession storage s = sessions[id];
-        participants = this.getSessionParticipants(id);
-        deadline = s.deadline;
-        totalStake = s.totalStake;
-        state = s.state;
-        snapshotBlock = s.snapshotBlock;
-        winners = s.winners;
-        rewardPerWinner = s.rewardPerWinner;
-    }
     uint256 public sessionCount;
 
-    // Events
     event UserFunded(address indexed user, uint256 amount);
     event SessionCreated(uint256 indexed sessionId, address[] participants, uint256[] stakes, uint256 deadline, uint256 snapshotBlock);
     event SessionCompleted(uint256 indexed sessionId, address[] winners);
@@ -92,7 +67,6 @@ contract SimbiToken is ERC20, ERC20Permit, ERC20Votes, AccessControl, Reentrancy
     event LoginRewardUpdated(uint256 oldValue, uint256 newValue);
     event MaxBalanceUpdated(uint256 oldValue, uint256 newValue);
 
-    // Modifiers
     modifier onlyActiveSession(uint256 id) {
         require(sessions[id].state == SessionState.Active, "Session not active");
         _;
@@ -107,10 +81,7 @@ contract SimbiToken is ERC20, ERC20Permit, ERC20Votes, AccessControl, Reentrancy
         _;
     }
     modifier onlyParticipant(uint256 id) {
-        require(
-            sessions[id].participantSet.contains(msg.sender),
-            "Not a session participant"
-        );
+        require(sessions[id].participantSet.contains(msg.sender), "Not a session participant");
         _;
     }
     modifier nonZero(address a) {
@@ -118,28 +89,39 @@ contract SimbiToken is ERC20, ERC20Permit, ERC20Votes, AccessControl, Reentrancy
         _;
     }
 
-    constructor() ERC20("Simbi Token", "SIMBI") ERC20Permit("Simbi Token") {
-        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _setupRole(ADMIN_ROLE, msg.sender);
-        _setupRole(REWARD_MANAGER_ROLE, msg.sender);
+    constructor() ERC20("Simbi Token", "SIMBI") ERC20Permit("SIMBI") {
+        // FIXED: Use _grantRole instead of grantRole to avoid access control checks
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(ADMIN_ROLE, msg.sender);
+        _grantRole(REWARD_MANAGER_ROLE, msg.sender);
         _mint(msg.sender, 1_000_000 * 10 ** decimals());
     }
 
-    // ===== ERC20Votes overrides =====
-    function _afterTokenTransfer(address from, address to, uint256 amount)
-        internal override(ERC20, ERC20Votes)
-    {
+    // Override functions required by inheritance
+
+    /**
+     * @dev Returns the current nonce for `owner`. This value must be included whenever a signature is generated for {permit}.
+     * Every successful call to {permit} increases `owner`'s nonce by one. This prevents a signature from being used multiple times.
+     */
+    function nonces(address owner) public view override(ERC20Permit) returns (uint256) {
+        return super.nonces(owner);
+    }
+
+    // Override the required functions for ERC20Votes in v4.x
+    function _beforeTokenTransfer(address from, address to, uint256 amount) internal override(ERC20) {
+        super._beforeTokenTransfer(from, to, amount);
+    }
+
+    function _afterTokenTransfer(address from, address to, uint256 amount) internal override(ERC20, ERC20Votes) {
         super._afterTokenTransfer(from, to, amount);
     }
-    function _mint(address to, uint256 amount)
-        internal override(ERC20, ERC20Votes)
-    {
+
+    function _mint(address to, uint256 amount) internal override(ERC20, ERC20Votes) {
         super._mint(to, amount);
     }
-    function _burn(address from, uint256 amount)
-        internal override(ERC20, ERC20Votes)
-    {
-        super._burn(from, amount);
+
+    function _burn(address account, uint256 amount) internal override(ERC20, ERC20Votes) {
+        super._burn(account, amount);
     }
 
     // ===== Token Rewards =====
@@ -233,7 +215,15 @@ contract SimbiToken is ERC20, ERC20Permit, ERC20Votes, AccessControl, Reentrancy
                 vc++;
             }
         }
-        // adjust arrays via assembly if vc < length
+        
+        // If vc < length, resize arrays
+        if (vc < participants.length) {
+            assembly {
+                mstore(validP, vc)
+                mstore(validS, vc)
+            }
+        }
+        
         s.totalStake = total;
         emit SessionCreated(id, validP, validS, s.deadline, s.snapshotBlock);
     }
@@ -286,8 +276,11 @@ contract SimbiToken is ERC20, ERC20Permit, ERC20Votes, AccessControl, Reentrancy
                 wc++;
             }
         }
+        
+        // Resize winners array if needed
         assembly { mstore(wins, wc) }
         s.winners = wins;
+        
         if (wc > 0) {
             s.rewardPerWinner = s.totalStake / wc;
         }
@@ -385,6 +378,7 @@ contract SimbiToken is ERC20, ERC20Permit, ERC20Votes, AccessControl, Reentrancy
             emit TimelockScheduled(op, timelockSchedule[op]);
         }
     }
+    
     function updateSignupReward(uint256 nv) external nonReentrant {
         require(
             hasRole(ADMIN_ROLE, msg.sender) || hasRole(REWARD_MANAGER_ROLE, msg.sender),
@@ -398,6 +392,7 @@ contract SimbiToken is ERC20, ERC20Permit, ERC20Votes, AccessControl, Reentrancy
         emit TimelockExecuted(op);
         emit SignupRewardUpdated(old, nv);
     }
+    
     function scheduleUpdateLoginReward(uint256 nv) external {
         require(
             hasRole(ADMIN_ROLE, msg.sender) || hasRole(REWARD_MANAGER_ROLE, msg.sender),
@@ -409,6 +404,7 @@ contract SimbiToken is ERC20, ERC20Permit, ERC20Votes, AccessControl, Reentrancy
             emit TimelockScheduled(op, timelockSchedule[op]);
         }
     }
+    
     function updateLoginReward(uint256 nv) external nonReentrant {
         require(
             hasRole(ADMIN_ROLE, msg.sender) || hasRole(REWARD_MANAGER_ROLE, msg.sender),
@@ -422,6 +418,7 @@ contract SimbiToken is ERC20, ERC20Permit, ERC20Votes, AccessControl, Reentrancy
         emit TimelockExecuted(op);
         emit LoginRewardUpdated(old, nv);
     }
+    
     function scheduleUpdateMaxBalance(uint256 nv) external {
         require(
             hasRole(ADMIN_ROLE, msg.sender) || hasRole(REWARD_MANAGER_ROLE, msg.sender),
@@ -433,6 +430,7 @@ contract SimbiToken is ERC20, ERC20Permit, ERC20Votes, AccessControl, Reentrancy
             emit TimelockScheduled(op, timelockSchedule[op]);
         }
     }
+    
     function updateMaxBalance(uint256 nv) external nonReentrant {
         require(
             hasRole(ADMIN_ROLE, msg.sender) || hasRole(REWARD_MANAGER_ROLE, msg.sender),
@@ -451,45 +449,5 @@ contract SimbiToken is ERC20, ERC20Permit, ERC20Votes, AccessControl, Reentrancy
         public override nonZero(account)
     {
         super.grantRole(role, account);
-    }
-
-    // ===== View Helpers =====
-    function getSessionParticipants(uint256 id) external view returns (address[] memory) {
-        StudySession storage s = sessions[id];
-        uint256 l = s.participantSet.length();
-        address[] memory arr = new address[](l);
-        for (uint256 i; i < l; i++) arr[i] = s.participantSet.at(i);
-        return arr;
-    }
-    function getParticipantStake(uint256 id, address p) external view returns (uint256) {
-        return sessions[id].participants[p].stake;
-    }
-    function hasCompleted(uint256 id, address p) external view returns (bool) {
-        return sessions[id].participants[p].completed;
-    }
-    function getSessionState(uint256 id) external view returns (SessionState) {
-        StudySession storage s = sessions[id];
-        if (s.state == SessionState.Active && block.timestamp >= s.deadline) {
-            return SessionState.Ended;
-        }
-        return s.state;
-    }
-    function getSessionWinners(uint256 id) external view returns (address[] memory) {
-        StudySession storage s = sessions[id];
-        if (s.winners.length > 0) return s.winners;
-        if (!(s.state == SessionState.Ended || (s.state == SessionState.Active && block.timestamp >= s.deadline))) {
-            return new address[](0);
-        }
-        uint256 l = s.participantSet.length();
-        address[] memory arr = new address[](l);
-        uint256 c;
-        for (uint256 i; i < l; i++) {
-            address p = s.participantSet.at(i);
-            if (s.participants[p].completed) {
-                arr[c++] = p;
-            }
-        }
-        assembly { mstore(arr, c) }
-        return arr;
     }
 }

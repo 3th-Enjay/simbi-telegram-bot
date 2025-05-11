@@ -1,0 +1,28 @@
+{
+  "name": "Collaboration Champion",
+  "description": "Awarded for participating in 10+ peer study sessions.",
+  "image": "ipfs://bafkreiclgke52dkxcmbwdb7ryhttlsvfgswaogjamme6gyu6yluzif6zdy",
+  "external_url": "https://yourstudyapp.com/achievements/USER_ID?ref=nft",
+  "attributes": [
+    {
+      "trait_type": "Achievement",
+      "value": "Collaboration Champion"
+    },
+    {
+      "trait_type": "Milestone",
+      "value": "10+ Peer Study Sessions"
+    },
+    {
+      "trait_type": "Platform",
+      "value": "Simbi Telegram & Web App"
+    }
+  ],
+  "properties": {
+    "telegram_mini_app": {
+      "deep_link": "https://t.me/your_mini_app/achievements?userId=USER_ID"
+    },
+    "web_app": {
+      "profile_url": "https://yourstudyapp.com/profile/USER_ID"
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "name": "Quiz Conqueror",
+  "description": "Awarded for achieving a perfect 100% score on any quiz.",
+  "image": "ipfs://bafkreic34bod3mtk6ih73mpzvuavlj4rkv26wklhclezadok4bcch5qdoy",
+  "external_url": "https://yourstudyapp.com/achievements/USER_ID?ref=nft",
+  "attributes": [
+    {
+      "trait_type": "Achievement",
+      "value": "Quiz Conqueror"
+    },
+    {
+      "trait_type": "Milestone",
+      "value": "100% Quiz Score"
+    },
+    {
+      "trait_type": "Platform",
+      "value": "Simbi Telegram & Web App"
+    },
+    {
+      "trait_type": "Difficulty",
+      "value": "Perfect Score"
+    }
+  ],
+  "properties": {
+    "telegram_mini_app": {
+      "deep_link": "https://t.me/your_mini_app/achievements?userId=USER_ID"
+    },
+    "web_app": {
+      "profile_url": "https://yourstudyapp.com/profile/USER_ID"
+    }
+  }
+}

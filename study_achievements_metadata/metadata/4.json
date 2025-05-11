@@ -1,0 +1,32 @@
+{
+  "name": "Study Group Leader",
+  "description": "Awarded for creating and hosting multiple successful study sessions that helped peers learn effectively.",
+  "image": "ipfs://bafkreieraaoqwbfhonob57b77ne764rcc76nzfvbr6gyvimxqtnkxddy3a",
+  "external_url": "https://yourstudyapp.com/achievements/USER_ID?ref=nft",
+  "attributes": [
+    {
+      "trait_type": "Achievement",
+      "value": "Study Group Leader"
+    },
+    {
+      "trait_type": "Milestone",
+      "value": "Hosted 5+ Successful Sessions"
+    },
+    {
+      "trait_type": "Platform",
+      "value": "Simbi Telegram & Web App"
+    },
+    {
+      "trait_type": "Leadership Tier",
+      "value": "Gold" 
+    }
+  ],
+  "properties": {
+    "telegram_mini_app": {
+      "deep_link": "https://t.me/your_mini_app/achievements?userId=USER_ID"
+    },
+    "web_app": {
+      "profile_url": "https://yourstudyapp.com/profile/USER_ID"
+    }
+  }
+}
